@@ -113,6 +113,29 @@ impl From<Coord> for (usize, usize) {
     }
 }
 
+#[derive(Debug)]
+struct InvalidFenStringError {
+    fen: String,
+}
+
+impl InvalidFenStringError {
+    fn new(fen: &str) -> Self {
+        Self {
+            fen: String::from(fen),
+        }
+    }
+}
+
+impl Error for InvalidFenStringError {}
+
+impl Display for InvalidFenStringError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Invalid FEN String {}", self.fen)
+    }
+}
+
+const START_POS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 struct Board {
     board: [Piece; 128],
@@ -131,7 +154,7 @@ impl Board {
         }
     }
 
-    fn from_fen(fen: &str) -> Self {
+    fn from_fen(fen: &str) -> Result<Self, InvalidFenStringError> {
         let mut board = [Piece::Empty; 128];
 
         let mut idx: usize = 0;
@@ -166,21 +189,21 @@ impl Board {
 
                 ' ' => break,
 
-                _ => panic!("Invalid FEN string"),
+                _ => return Err(InvalidFenStringError::new(fen)),
             };
 
             board[idx] = piece;
             idx += 1;
         }
 
-        let turn = it.next().unwrap();
+        let to_move = it.next().unwrap();
 
-        let turn = if turn == "w" {
+        let to_move = if to_move == "w" {
             Turn::White
-        } else if turn == "b" {
+        } else if to_move == "b" {
             Turn::Black
         } else {
-            panic!("Invalid FEN string");
+            return Err(InvalidFenStringError::new(fen));
         };
 
         let mut castling = [false; 4];
@@ -193,17 +216,26 @@ impl Board {
                 'k' => castling[2] = true,
                 'q' => castling[3] = true,
 
-                _ => panic!("Invalid FEN string"),
+                _ => return Err(InvalidFenStringError::new(fen)),
             }
         }
 
-        let en_passant_tgt = Coord::from_alg(it.next().unwrap()).ok();
+        let en_pass_tgt = Coord::from_alg(it.next().unwrap()).ok();
 
-        todo!();
+        Ok(Self {
+            board,
+            to_move,
+            castling,
+            en_pass_tgt,
+        })
+    }
+
+    fn start_pos() -> Self {
+        Self::from_fen(START_POS).unwrap()
     }
 }
 
 fn main() {
-    let board = Board::new();
+    let board = Board::start_pos();
     println!("{:?}", board);
 }
