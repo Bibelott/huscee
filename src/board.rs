@@ -113,6 +113,14 @@ impl Board {
         Self::from_fen(START_POS).unwrap()
     }
 }
+
+impl std::ops::Index<Coord> for Board {
+    type Output = Piece;
+    fn index(&self, index: Coord) -> &Self::Output {
+        &self.board[index.0 as usize]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
