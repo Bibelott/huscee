@@ -51,34 +51,24 @@ impl Board {
         let mut it = fen.split_ascii_whitespace();
 
         for p in it.next().unwrap().chars() {
-            let piece = match p {
-                'P' => Piece::PawnW,
-                'R' => Piece::RookW,
-                'N' => Piece::KnightW,
-                'B' => Piece::BishopW,
-                'Q' => Piece::QueenW,
-                'K' => Piece::KingW,
+            let piece = if let Ok(p) = Piece::from_char(p) {
+                p
+            } else {
+                match p {
+                    '0'..='8' => {
+                        idx += p.to_digit(10).unwrap() as usize;
+                        continue;
+                    }
 
-                'p' => Piece::PawnB,
-                'r' => Piece::RookB,
-                'n' => Piece::KnightB,
-                'b' => Piece::BishopB,
-                'q' => Piece::QueenB,
-                'k' => Piece::KingB,
+                    '/' => {
+                        idx += 8;
+                        continue;
+                    }
 
-                '0'..='8' => {
-                    idx += p.to_digit(10).unwrap() as usize;
-                    continue;
+                    ' ' => break,
+
+                    _ => return Err(InvalidFenStringError::new(fen)),
                 }
-
-                '/' => {
-                    idx += 8;
-                    continue;
-                }
-
-                ' ' => break,
-
-                _ => return Err(InvalidFenStringError::new(fen)),
             };
 
             board[idx] = piece;

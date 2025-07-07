@@ -61,12 +61,61 @@ enum Piece {
 }
 
 impl Piece {
+    fn from_char(value: char) -> Result<Self, ()> {
+        let p = match value {
+            'P' => Piece::PawnW,
+            'R' => Piece::RookW,
+            'N' => Piece::KnightW,
+            'B' => Piece::BishopW,
+            'Q' => Piece::QueenW,
+            'K' => Piece::KingW,
+
+            'p' => Piece::PawnB,
+            'r' => Piece::RookB,
+            'n' => Piece::KnightB,
+            'b' => Piece::BishopB,
+            'q' => Piece::QueenB,
+            'k' => Piece::KingB,
+
+            _ => return Err(()),
+        };
+        Ok(p)
+    }
+
     fn is_white(self) -> bool {
         self != Piece::Empty && ((self as u8) & 8) == 0
     }
 
     fn is_black(self) -> bool {
         self != Piece::Empty && !self.is_white()
+    }
+}
+
+impl From<char> for Piece {
+    fn from(value: char) -> Self {
+        Self::from_char(value).unwrap()
+    }
+}
+
+impl From<Piece> for char {
+    fn from(value: Piece) -> Self {
+        match value {
+            Piece::PawnW => 'P',
+            Piece::RookW => 'R',
+            Piece::KnightW => 'N',
+            Piece::BishopW => 'B',
+            Piece::QueenW => 'Q',
+            Piece::KingW => 'K',
+
+            Piece::PawnB => 'p',
+            Piece::RookB => 'r',
+            Piece::KnightB => 'n',
+            Piece::BishopB => 'b',
+            Piece::QueenB => 'q',
+            Piece::KingB => 'k',
+
+            Piece::Empty => ' ',
+        }
     }
 }
 
