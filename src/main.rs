@@ -42,7 +42,7 @@ impl<'a> Error for InvalidCoordinateError<'a> {}
 
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum Piece {
+pub enum Piece {
     Empty = 0,
 
     PawnW = 1,

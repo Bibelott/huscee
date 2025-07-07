@@ -113,3 +113,210 @@ impl Board {
         Self::from_fen(START_POS).unwrap()
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_start_pos() {
+        let board = Board::start_pos();
+
+        assert_eq!(
+            board.board,
+            [
+                Piece::RookB,
+                Piece::KnightB,
+                Piece::BishopB,
+                Piece::QueenB,
+                Piece::KingB,
+                Piece::BishopB,
+                Piece::KnightB,
+                Piece::RookB,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::PawnB,
+                Piece::PawnB,
+                Piece::PawnB,
+                Piece::PawnB,
+                Piece::PawnB,
+                Piece::PawnB,
+                Piece::PawnB,
+                Piece::PawnB,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::PawnW,
+                Piece::PawnW,
+                Piece::PawnW,
+                Piece::PawnW,
+                Piece::PawnW,
+                Piece::PawnW,
+                Piece::PawnW,
+                Piece::PawnW,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::RookW,
+                Piece::KnightW,
+                Piece::BishopW,
+                Piece::QueenW,
+                Piece::KingW,
+                Piece::BishopW,
+                Piece::KnightW,
+                Piece::RookW,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty,
+                Piece::Empty, // thank you rustfmt for this incredibly readable piece of code
+            ]
+        );
+
+        assert_eq!(board.to_move, Turn::White);
+
+        assert_eq!(board.castling, [true, true, true, true]);
+
+        assert_eq!(board.en_pass_tgt, None);
+    }
+
+    #[test]
+    fn test_castle_array() {
+        assert_eq!(
+            Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w Qkq - 0 1")
+                .unwrap()
+                .castling,
+            [false, true, true, true]
+        );
+
+        assert_eq!(
+            Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w Kkq - 0 1")
+                .unwrap()
+                .castling,
+            [true, false, true, true]
+        );
+
+        assert_eq!(
+            Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQq - 0 1")
+                .unwrap()
+                .castling,
+            [true, true, false, true]
+        );
+
+        assert_eq!(
+            Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQk - 0 1")
+                .unwrap()
+                .castling,
+            [true, true, true, false]
+        );
+
+        assert_eq!(
+            Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1")
+                .unwrap()
+                .castling,
+            [false, false, false, false]
+        );
+    }
+
+    #[test]
+    fn test_en_passant() {
+        assert_eq!(
+            Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - e3 0 1")
+                .unwrap()
+                .en_pass_tgt,
+            Some(Coord(0x24))
+        );
+    }
+
+    #[test]
+    fn test_turn() {
+        assert_eq!(
+            Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b - e3 0 1")
+                .unwrap()
+                .to_move,
+            Turn::Black
+        );
+    }
+}
