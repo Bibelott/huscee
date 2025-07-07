@@ -147,8 +147,8 @@ impl<'a> Coord {
             return Err(InvalidCoordinateError::new_alg(alg));
         }
         let mut chars = alg.chars();
-        let rank = (chars.next().unwrap() as usize) - ('0' as usize);
         let file = (chars.next().unwrap() as usize) - ('a' as usize);
+        let rank = (chars.next().unwrap() as usize) - ('1' as usize);
 
         Self::from_rf(rank, file)
     }
