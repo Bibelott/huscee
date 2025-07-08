@@ -27,10 +27,10 @@ impl Display for InvalidFenStringError {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Board {
-    board: [Piece; 128],
-    to_move: Turn,
-    castling: [bool; 4],
-    en_pass_tgt: Option<Coord>,
+    pub board: [Piece; 128],
+    pub to_move: Turn,
+    pub castling: [bool; 4],
+    pub en_pass_tgt: Option<Coord>,
 }
 
 impl Board {

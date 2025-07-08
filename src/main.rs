@@ -1,10 +1,11 @@
 mod board;
 mod coord;
-
-use std::{error::Error, fmt::Display};
+mod moves;
 
 use board::Board;
 use coord::Coord;
+
+use std::{error::Error, fmt::Display};
 
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
