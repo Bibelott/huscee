@@ -52,7 +52,7 @@ impl<'a> Coord {
         ((self.0 >> 4) as usize, (self.0 & 7) as usize)
     }
 
-    pub fn from_alg(alg: &str) -> Result<Self, InvalidCoordinateError> {
+    pub fn from_alg(alg: &str) -> Result<Self, InvalidCoordinateError<'_>> {
         if alg.len() != 2 {
             return Err(InvalidCoordinateError::new_alg(alg));
         }
