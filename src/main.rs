@@ -7,6 +7,8 @@ use coord::Coord;
 
 use std::{error::Error, fmt::Display};
 
+use crate::moves::MoveDict;
+
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Color {
@@ -135,5 +137,8 @@ impl From<Piece> for char {
 
 fn main() {
     let board = Board::start_pos();
-    println!("{board:?}");
+
+    let move_dict = MoveDict::gen_moves(&board);
+
+    println!("{move_dict:?}");
 }

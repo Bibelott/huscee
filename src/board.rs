@@ -1,3 +1,5 @@
+use crate::moves::{Move, MoveDict};
+
 use super::*;
 
 use std::error::Error;
@@ -112,12 +114,35 @@ impl Board {
     pub fn start_pos() -> Self {
         Self::from_fen(START_POS).unwrap()
     }
+
+    pub fn make_move(&mut self, orig: Coord, mov: Move) {
+        self[mov.dst] = mov.prom_tgt.unwrap_or(self[orig]);
+        self[orig] = Piece::Empty;
+    }
+
+    pub fn check_check(&self, move_dict: &MoveDict, color: Color) -> bool {
+        for moves in move_dict.0.values() {
+            for mov in moves {
+                if self[mov.dst] == Piece::KingW.to_color(color) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
 
 impl std::ops::Index<Coord> for Board {
     type Output = Piece;
     fn index(&self, index: Coord) -> &Self::Output {
         &self.board[index.0 as usize]
+    }
+}
+
+impl std::ops::IndexMut<Coord> for Board {
+    fn index_mut(&mut self, index: Coord) -> &mut Self::Output {
+        &mut self.board[index.0 as usize]
     }
 }
 

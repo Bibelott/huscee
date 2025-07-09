@@ -1,18 +1,18 @@
 use super::*;
 
 #[derive(Debug)]
-enum CoordRepr<'a> {
+enum CoordRepr {
     Empty,
     Num(usize),
-    Alg(&'a str),
+    Alg(String),
 }
 
 #[derive(Debug)]
-pub struct InvalidCoordinateError<'a> {
-    coord: CoordRepr<'a>,
+pub struct InvalidCoordinateError {
+    coord: CoordRepr,
 }
 
-impl<'a> InvalidCoordinateError<'a> {
+impl InvalidCoordinateError {
     fn new() -> Self {
         Self {
             coord: CoordRepr::Empty,
@@ -24,16 +24,16 @@ impl<'a> InvalidCoordinateError<'a> {
         }
     }
 
-    fn new_alg(alg: &'a str) -> Self {
+    fn new_alg(alg: &str) -> Self {
         Self {
-            coord: CoordRepr::Alg(alg),
+            coord: CoordRepr::Alg(String::from(alg)),
         }
     }
 }
 
-impl<'a> Display for InvalidCoordinateError<'a> {
+impl Display for InvalidCoordinateError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.coord {
+        match &self.coord {
             CoordRepr::Empty => write!(f, "Invalid Coordinate"),
             CoordRepr::Num(coord) => write!(f, "Invalid Coordinate: {coord:#x}"),
             CoordRepr::Alg(alg) => write!(f, "Invalid Coordinate: {alg}"),
@@ -41,13 +41,13 @@ impl<'a> Display for InvalidCoordinateError<'a> {
     }
 }
 
-impl<'a> Error for InvalidCoordinateError<'a> {}
+impl Error for InvalidCoordinateError {}
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Coord(pub u8);
 
-impl<'a> Coord {
-    pub fn from_rf(rank: usize, file: usize) -> Result<Self, InvalidCoordinateError<'a>> {
+impl Coord {
+    pub fn from_rf(rank: usize, file: usize) -> Result<Self, InvalidCoordinateError> {
         let val = ((rank) << 4) + file;
         if val & 0x88 != 0 || val >= 128 {
             return Err(InvalidCoordinateError::new_num(val));
@@ -67,7 +67,7 @@ impl<'a> Coord {
         self.0 & 7
     }
 
-    pub fn from_alg(alg: &str) -> Result<Self, InvalidCoordinateError<'_>> {
+    pub fn from_alg(alg: &str) -> Result<Self, InvalidCoordinateError> {
         if alg.len() != 2 {
             return Err(InvalidCoordinateError::new_alg(alg));
         }
@@ -78,7 +78,7 @@ impl<'a> Coord {
         Self::from_rf(rank, file)
     }
 
-    pub fn add(self, b: (isize, isize)) -> Result<Self, InvalidCoordinateError<'a>> {
+    pub fn add(self, b: (isize, isize)) -> Result<Self, InvalidCoordinateError> {
         let mut rf = self.to_rf();
         rf.0 =
             rf.0.checked_add_signed(b.0)
@@ -86,13 +86,14 @@ impl<'a> Coord {
         rf.1 =
             rf.1.checked_add_signed(b.1)
                 .ok_or(InvalidCoordinateError::new())?;
-        Ok(rf.into())
+        rf.try_into()
     }
 }
 
-impl From<(usize, usize)> for Coord {
-    fn from(value: (usize, usize)) -> Self {
-        Self::from_rf(value.0, value.1).unwrap()
+impl TryFrom<(usize, usize)> for Coord {
+    type Error = InvalidCoordinateError;
+    fn try_from(value: (usize, usize)) -> Result<Self, Self::Error> {
+        Self::from_rf(value.0, value.1)
     }
 }
 
