@@ -28,7 +28,7 @@ impl Display for InvalidFenStringError {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Board {
     pub board: [Piece; 128],
-    pub to_move: Turn,
+    pub to_move: Color,
     pub castling: [bool; 4],
     pub en_pass_tgt: Option<Coord>,
 }
@@ -37,7 +37,7 @@ impl Board {
     pub fn new() -> Self {
         Self {
             board: [Piece::Empty; 128],
-            to_move: Turn::White,
+            to_move: Color::White,
             castling: [true; 4],
             en_pass_tgt: None,
         }
@@ -78,9 +78,9 @@ impl Board {
         let to_move = it.next().unwrap();
 
         let to_move = if to_move == "w" {
-            Turn::White
+            Color::White
         } else if to_move == "b" {
-            Turn::Black
+            Color::Black
         } else {
             return Err(InvalidFenStringError::new(fen));
         };
@@ -263,7 +263,7 @@ mod tests {
             ]
         );
 
-        assert_eq!(board.to_move, Turn::White);
+        assert_eq!(board.to_move, Color::White);
 
         assert_eq!(board.castling, [true, true, true, true]);
 
@@ -324,7 +324,7 @@ mod tests {
             Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b - e3 0 1")
                 .unwrap()
                 .to_move,
-            Turn::Black
+            Color::Black
         );
     }
 }

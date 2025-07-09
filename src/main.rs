@@ -8,6 +8,23 @@ use coord::Coord;
 use std::{error::Error, fmt::Display};
 
 #[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Color {
+    White = 0,
+    Black = 1,
+}
+
+impl From<u8> for Color {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Self::White,
+            1 => Self::Black,
+            _ => panic!("AAAAAAAAAAAAAAAA"),
+        }
+    }
+}
+
+#[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Piece {
     Empty = 0,
@@ -28,7 +45,7 @@ pub enum Piece {
 }
 
 impl Piece {
-    fn from_char(value: char) -> Result<Self, ()> {
+    pub fn from_char(value: char) -> Result<Self, ()> {
         let p = match value {
             'P' => Piece::PawnW,
             'R' => Piece::RookW,
@@ -49,12 +66,42 @@ impl Piece {
         Ok(p)
     }
 
-    fn is_white(self) -> bool {
+    pub fn is_white(self) -> bool {
         self != Piece::Empty && ((self as u8) & 8) == 0
     }
 
-    fn is_black(self) -> bool {
+    pub fn is_black(self) -> bool {
         self != Piece::Empty && !self.is_white()
+    }
+
+    pub fn get_color(self) -> Color {
+        (((self as u8) & 8) >> 3).into()
+    }
+
+    pub fn to_color(self, color: Color) -> Self {
+        ((self as u8) | ((color as u8) << 3)).into()
+    }
+}
+
+impl From<u8> for Piece {
+    fn from(value: u8) -> Self {
+        match value {
+            1 => Piece::PawnW,
+            2 => Piece::RookW,
+            3 => Piece::KnightW,
+            4 => Piece::BishopW,
+            5 => Piece::QueenW,
+            6 => Piece::KingW,
+
+            9 => Piece::PawnB,
+            10 => Piece::RookB,
+            11 => Piece::KnightB,
+            12 => Piece::BishopB,
+            13 => Piece::QueenB,
+            14 => Piece::KingB,
+
+            _ => Piece::Empty,
+        }
     }
 }
 
@@ -84,13 +131,6 @@ impl From<Piece> for char {
             Piece::Empty => ' ',
         }
     }
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Turn {
-    White = 0,
-    Black = 1,
 }
 
 fn main() {
