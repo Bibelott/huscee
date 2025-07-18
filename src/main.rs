@@ -16,6 +16,15 @@ pub enum Color {
     Black = 1,
 }
 
+impl Color {
+    fn flip(self) -> Self {
+        match self {
+            Color::White => Color::Black,
+            Color::Black => Color::White,
+        }
+    }
+}
+
 impl From<u8> for Color {
     fn from(value: u8) -> Self {
         match value {
@@ -138,19 +147,5 @@ impl From<Piece> for char {
 fn main() {
     let board = Board::start_pos();
 
-    let move_dict = MoveDict::gen_moves(&board);
-
-    for (orig, moves) in move_dict.0.iter() {
-        let p = board[*orig];
-        if p == Piece::Empty || moves.is_empty() {
-            continue;
-        }
-
-        print!("{p:?}@{}: ", orig.to_alg());
-
-        for &mv in moves {
-            print!("{} ", mv.dst.to_alg());
-        }
-        println!();
-    }
+    println!("{}", board.perft(2));
 }

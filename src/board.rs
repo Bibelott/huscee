@@ -120,6 +120,32 @@ impl Board {
         Self::from_fen(START_POS).unwrap()
     }
 
+    pub fn perft(&self, depth: usize) -> u64 {
+        if depth == 0 {
+            return 1;
+        }
+
+        let mut nodes = 0;
+
+        let move_dict = MoveDict::gen_moves(self);
+
+        for (orig, moves) in move_dict.0 {
+            let piece = self[orig];
+
+            if moves.is_empty() || piece == Piece::Empty {
+                continue;
+            }
+
+            for mov in moves {
+                let mut board = self.clone();
+                board.make_move(orig, mov);
+                nodes += board.perft(depth - 1);
+            }
+        }
+
+        nodes
+    }
+
     pub fn make_move(&mut self, orig: Coord, mov: Move) {
         let piece = self[orig];
 
