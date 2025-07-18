@@ -64,6 +64,12 @@ impl MoveDict {
             for file in 0..7 {
                 let coord = Coord::try_from((rank, file)).unwrap();
 
+                let piece = board[coord];
+
+                if piece.get_color() != board.to_move {
+                    continue;
+                }
+
                 let moves = Self::gen_at_coord_illegal(board, coord);
 
                 dict.insert(coord, moves);
@@ -74,7 +80,7 @@ impl MoveDict {
     }
 
     /// Generates all possible moves of a piece on the given square. Includes moves that expose
-    /// your king to check (thus the 'illegal' part).
+    /// your king to check (thus the 'illegal' part). Does not consider turn order.
     fn gen_at_coord_illegal(board: &Board, coord: Coord) -> Box<[Move]> {
         let mut moves: Vec<Move> = Vec::new();
 
