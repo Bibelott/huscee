@@ -121,8 +121,49 @@ impl Board {
     }
 
     pub fn make_move(&mut self, orig: Coord, mov: Move) {
+        let piece = self[orig];
+
         self[mov.dst] = mov.prom_tgt.unwrap_or(self[orig]);
         self[orig] = Piece::Empty;
+
+        if let Some(tgt) = self.en_pass_tgt
+            && mov.dst == tgt
+        {
+            if piece == Piece::PawnW {
+                self[mov.dst.add((-1, 0)).unwrap()] = Piece::Empty;
+            } else if piece == Piece::PawnB {
+                self[mov.dst.add((1, 0)).unwrap()] = Piece::Empty;
+            }
+        }
+
+        let (r, f) = orig.to_rf();
+
+        // Move the rook when castling
+        if piece.to_color(Color::White) == Piece::KingW && f == 4 {
+            if mov.dst.file() == 2 {
+                self.make_move(
+                    (r, 0).try_into().unwrap(),
+                    Move::new((r, 3).try_into().unwrap(), None),
+                );
+            } else if mov.dst.file() == 6 {
+                self.make_move(
+                    (r, 7).try_into().unwrap(),
+                    Move::new((r, 5).try_into().unwrap(), None),
+                );
+            }
+        }
+
+        // Update castling possibilty array
+        if piece.to_color(Color::White) == Piece::KingW {
+            self.castling[2 * piece.get_color() as usize] = false;
+            self.castling[2 * piece.get_color() as usize + 1] = false;
+        } else if piece.to_color(Color::White) == Piece::RookW {
+            if f == 7 {
+                self.castling[2 * piece.get_color() as usize] = false;
+            } else if f == 0 {
+                self.castling[2 * piece.get_color() as usize + 1] = false;
+            }
+        }
     }
 
     pub fn check_check(&self, move_dict: &MoveDict, color: Color) -> bool {
@@ -134,7 +175,7 @@ impl Board {
             }
         }
 
-        return false;
+        false
     }
 }
 
