@@ -11,7 +11,7 @@ use crate::moves::MoveDict;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Color {
+pub enum Color {
     White = 0,
     Black = 1,
 }
@@ -140,5 +140,17 @@ fn main() {
 
     let move_dict = MoveDict::gen_moves(&board);
 
-    println!("{move_dict:?}");
+    for (orig, moves) in move_dict.0.iter() {
+        let p = board[*orig];
+        if p == Piece::Empty || moves.is_empty() {
+            continue;
+        }
+
+        print!("{p:?}@{}: ", orig.to_alg());
+
+        for &mv in moves {
+            print!("{} ", mv.dst.to_alg());
+        }
+        println!();
+    }
 }

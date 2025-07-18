@@ -48,7 +48,7 @@ impl Board {
     pub fn from_fen(fen: &str) -> Result<Self, InvalidFenStringError> {
         let mut board = [Piece::Empty; 128];
 
-        let mut idx: usize = 0;
+        let mut idx: usize = 119;
 
         let mut it = fen.split_ascii_whitespace();
 
@@ -58,12 +58,12 @@ impl Board {
             } else {
                 match p {
                     '0'..='8' => {
-                        idx += p.to_digit(10).unwrap() as usize;
+                        idx -= p.to_digit(10).unwrap() as usize;
                         continue;
                     }
 
                     '/' => {
-                        idx += 8;
+                        idx -= 8;
                         continue;
                     }
 
@@ -74,7 +74,12 @@ impl Board {
             };
 
             board[idx] = piece;
-            idx += 1;
+
+            if idx > 0 {
+                idx -= 1;
+            } else {
+                break;
+            }
         }
 
         let to_move = it.next().unwrap();

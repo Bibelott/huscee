@@ -78,6 +78,15 @@ impl Coord {
         Self::from_rf(rank, file)
     }
 
+    pub fn to_alg(self) -> String {
+        let mut alg = String::new();
+
+        alg.push((self.file() + ('a' as u8)) as char);
+        alg.push((self.rank() + ('1' as u8)) as char);
+
+        alg
+    }
+
     pub fn add(self, b: (isize, isize)) -> Result<Self, InvalidCoordinateError> {
         let mut rf = self.to_rf();
         rf.0 =
