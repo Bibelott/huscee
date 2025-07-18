@@ -60,13 +60,13 @@ impl MoveDict {
     fn gen_moves_illegal(board: &Board) -> Self {
         let mut dict: HashMap<Coord, Box<[Move]>> = HashMap::new();
 
-        for rank in 0..7 {
-            for file in 0..7 {
+        for rank in 0..8 {
+            for file in 0..8 {
                 let coord = Coord::try_from((rank, file)).unwrap();
 
                 let piece = board[coord];
 
-                if piece.get_color() != board.to_move {
+                if piece == Piece::Empty || piece.get_color() != board.to_move {
                     continue;
                 }
 
@@ -135,6 +135,7 @@ impl MoveDict {
         // capture left/right
         for file_add in [-1, 1] {
             if let Ok(c) = orig.add((row_add, file_add))
+                && (board[c] != Piece::Empty)
                 && (board[c].get_color() != board[orig].get_color()
                     || board.en_pass_tgt.is_some_and(|tgt| c == tgt))
             {
