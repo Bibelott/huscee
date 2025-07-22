@@ -151,25 +151,25 @@ impl MoveDict {
     }
 
     fn add_rook_moves(board: &Board, orig: Coord, moves: &mut Vec<Move>) {
-        for i in 1..7 {
+        for i in 1..8 {
             if Self::add_move(board, moves, orig, (i, 0)).is_err() {
                 break;
             }
         }
 
-        for i in 1..7 {
+        for i in 1..8 {
             if Self::add_move(board, moves, orig, (-i, 0)).is_err() {
                 break;
             }
         }
 
-        for j in 1..7 {
+        for j in 1..8 {
             if Self::add_move(board, moves, orig, (0, j)).is_err() {
                 break;
             }
         }
 
-        for j in 1..7 {
+        for j in 1..8 {
             if Self::add_move(board, moves, orig, (0, -j)).is_err() {
                 break;
             }
@@ -177,25 +177,25 @@ impl MoveDict {
     }
 
     fn add_bishop_moves(board: &Board, orig: Coord, moves: &mut Vec<Move>) {
-        for i in 1..7 {
+        for i in 1..8 {
             if Self::add_move(board, moves, orig, (i, i)).is_err() {
                 break;
             }
         }
 
-        for i in 1..7 {
+        for i in 1..8 {
             if Self::add_move(board, moves, orig, (i, -i)).is_err() {
                 break;
             }
         }
 
-        for i in 1..7 {
+        for i in 1..8 {
             if Self::add_move(board, moves, orig, (-i, i)).is_err() {
                 break;
             }
         }
 
-        for i in 1..7 {
+        for i in 1..8 {
             if Self::add_move(board, moves, orig, (-i, -i)).is_err() {
                 break;
             }
