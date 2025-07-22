@@ -1,6 +1,6 @@
 use super::*;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, hint::black_box};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Move {
@@ -151,26 +151,35 @@ impl MoveDict {
     }
 
     fn add_rook_moves(board: &Board, orig: Coord, moves: &mut Vec<Move>) {
+        // TODO: figure out how to DRY this
         for i in 1..8 {
-            if Self::add_move(board, moves, orig, (i, 0)).is_err() {
+            let err = Self::add_move(board, moves, orig, (i, 0));
+            // break on capture
+            if err == Ok(true) || err.is_err() {
                 break;
             }
         }
 
         for i in 1..8 {
-            if Self::add_move(board, moves, orig, (-i, 0)).is_err() {
+            let err = Self::add_move(board, moves, orig, (-i, 0));
+            // break on capture
+            if err == Ok(true) || err.is_err() {
                 break;
             }
         }
 
         for j in 1..8 {
-            if Self::add_move(board, moves, orig, (0, j)).is_err() {
+            let err = Self::add_move(board, moves, orig, (0, j));
+            // break on capture
+            if err == Ok(true) || err.is_err() {
                 break;
             }
         }
 
         for j in 1..8 {
-            if Self::add_move(board, moves, orig, (0, -j)).is_err() {
+            let err = Self::add_move(board, moves, orig, (0, -j));
+            // break on capture
+            if err == Ok(true) || err.is_err() {
                 break;
             }
         }
@@ -178,25 +187,33 @@ impl MoveDict {
 
     fn add_bishop_moves(board: &Board, orig: Coord, moves: &mut Vec<Move>) {
         for i in 1..8 {
-            if Self::add_move(board, moves, orig, (i, i)).is_err() {
+            let err = Self::add_move(board, moves, orig, (i, i));
+            // break on capture
+            if err == Ok(true) || err.is_err() {
                 break;
             }
         }
 
         for i in 1..8 {
-            if Self::add_move(board, moves, orig, (i, -i)).is_err() {
+            let err = Self::add_move(board, moves, orig, (i, -i));
+            // break on capture
+            if err == Ok(true) || err.is_err() {
                 break;
             }
         }
 
         for i in 1..8 {
-            if Self::add_move(board, moves, orig, (-i, i)).is_err() {
+            let err = Self::add_move(board, moves, orig, (-i, i));
+            // break on capture
+            if err == Ok(true) || err.is_err() {
                 break;
             }
         }
 
         for i in 1..8 {
-            if Self::add_move(board, moves, orig, (-i, -i)).is_err() {
+            let err = Self::add_move(board, moves, orig, (-i, -i));
+            // break on capture
+            if err == Ok(true) || err.is_err() {
                 break;
             }
         }
@@ -220,9 +237,9 @@ impl MoveDict {
     }
 
     fn add_king_moves(board: &Board, orig: Coord, moves: &mut Vec<Move>) {
-        for i in -1..1 {
-            for j in -1..1 {
-                _ = Self::add_move(board, moves, orig, (i, j));
+        for i in -1..=1 {
+            for j in -1..=1 {
+                let _ = Self::add_move(board, moves, orig, (i, j));
             }
         }
 
@@ -252,17 +269,19 @@ impl MoveDict {
         }
     }
 
+    /// Returns Ok(true) if the move is a capture, Ok(false) if it isn't and Err(()) if the move is
+    /// invalid.
     fn add_move(
         board: &Board,
         moves: &mut Vec<Move>,
         orig: Coord,
         add: (isize, isize),
-    ) -> Result<(), ()> {
+    ) -> Result<bool, ()> {
         if let Ok(c) = orig.add(add)
             && (board[c] == Piece::Empty || board[c].get_color() != board[orig].get_color())
         {
             moves.push(c.into());
-            Ok(())
+            Ok(board[c] != Piece::Empty)
         } else {
             Err(())
         }
