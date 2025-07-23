@@ -1,8 +1,9 @@
 use super::*;
 
-use std::{collections::HashMap, hint::black_box};
+// TODO: Use a non-crypto hashmap
+use std::collections::HashMap;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Move {
     pub dst: Coord,
     pub prom_tgt: Option<Piece>,
@@ -44,7 +45,7 @@ impl MoveDict {
                 let mut board = orig_board.clone();
                 board.make_move(orig, mov);
                 let dict = Self::gen_moves_illegal(&board);
-                if board.check_check(&dict, board[orig].get_color()) {
+                if board.check_check(&dict, board.to_move) {
                     continue;
                 }
 
@@ -135,8 +136,8 @@ impl MoveDict {
         // capture left/right
         for file_add in [-1, 1] {
             if let Ok(c) = orig.add((row_add, file_add))
-                && (board[c] != Piece::Empty)
-                && (board[c].get_color() != board[orig].get_color()
+                && (((board[c] != Piece::Empty)
+                    && (board[c].get_color() != board[orig].get_color()))
                     || board.en_pass_tgt.is_some_and(|tgt| c == tgt))
             {
                 if c.rank() == 0 || c.rank() == 7 {

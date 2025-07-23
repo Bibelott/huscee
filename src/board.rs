@@ -2,7 +2,7 @@ use crate::moves::{Move, MoveDict};
 
 use super::*;
 
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 
 const START_POS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -146,6 +146,24 @@ impl Board {
         nodes
     }
 
+    pub fn perft_split(&self, depth: usize) -> HashMap<(Coord, Move), u64> {
+        let mut map = HashMap::new();
+
+        for (orig, moves) in MoveDict::gen_moves(self).0 {
+            if moves.is_empty() || self[orig] == Piece::Empty {
+                continue;
+            }
+
+            for mov in moves {
+                let mut board = self.clone();
+                board.make_move(orig, mov);
+                let n = board.perft(depth - 1);
+                map.insert((orig, mov), n);
+            }
+        }
+        map
+    }
+
     pub fn make_move(&mut self, orig: Coord, mov: Move) {
         let piece = self[orig];
 
@@ -162,6 +180,14 @@ impl Board {
         }
 
         let (r, f) = orig.to_rf();
+
+        if piece.to_color(Color::White) == Piece::PawnW && r.abs_diff(mov.dst.rank() as usize) == 2
+        {
+            self.en_pass_tgt =
+                Some(Coord::from_rf(r.midpoint(mov.dst.rank() as usize), f).unwrap());
+        } else {
+            self.en_pass_tgt = None;
+        }
 
         // Move the rook when castling
         if piece.to_color(Color::White) == Piece::KingW && f == 4 {
@@ -201,7 +227,7 @@ impl Board {
     pub fn check_check(&self, move_dict: &MoveDict, color: Color) -> bool {
         for moves in move_dict.0.values() {
             for mov in moves {
-                if self[mov.dst] == Piece::KingW.to_color(color) {
+                if self[mov.dst] == Piece::KingW.to_color(color.flip()) {
                     return true;
                 }
             }
