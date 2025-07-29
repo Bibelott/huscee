@@ -3,4 +3,6 @@ name = "huscee"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
+[dev-dependencies]
+huscee-macros = { git = "https://github.com/Bibelott/huscee-macros" }
+paste = "1.0.15"
