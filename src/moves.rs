@@ -39,10 +39,36 @@ impl MoveDict {
 
         let mut legal_dict = HashMap::new();
 
-        for (orig, moves) in dict.0 {
+        for (&orig, moves) in dict.0.iter() {
             let mut legal_moves = Vec::new();
-            for mov in moves {
+            'move_loop: for &mov in moves {
                 let mut board = orig_board.clone();
+                if board[orig].to_color(Color::White) == Piece::KingW {
+                    let orig_file = orig.file();
+                    let dst_file = mov.dst.file();
+                    if orig_file.abs_diff(dst_file) == 2 {
+                        board.to_move = board.to_move.flip();
+                        let dict = Self::gen_moves_illegal(&board);
+                        if board.check_check(&dict, board.to_move) {
+                            continue 'move_loop;
+                        }
+                        board.to_move = board.to_move.flip();
+
+                        let file = orig_file.midpoint(dst_file);
+                        let mut board = board.clone();
+                        board.make_move(
+                            orig,
+                            Move::new(
+                                Coord::from_rf(mov.dst.rank() as usize, file as usize).unwrap(),
+                                None,
+                            ),
+                        );
+                        let dict = Self::gen_moves_illegal(&board);
+                        if board.check_check(&dict, board.to_move) {
+                            continue 'move_loop;
+                        }
+                    }
+                }
                 board.make_move(orig, mov);
                 let dict = Self::gen_moves_illegal(&board);
                 if board.check_check(&dict, board.to_move) {
@@ -118,7 +144,7 @@ impl MoveDict {
             // promotion
             if c.rank() == 0 || c.rank() == 7 {
                 for p in [Piece::QueenW, Piece::KnightW, Piece::BishopW, Piece::RookW] {
-                    moves.push(Move::new(c, Some(p.to_color(board[c].get_color()))))
+                    moves.push(Move::new(c, Some(p.to_color(board[orig].get_color()))))
                 }
             } else {
                 moves.push(c.into());
@@ -142,7 +168,7 @@ impl MoveDict {
             {
                 if c.rank() == 0 || c.rank() == 7 {
                     for p in [Piece::QueenW, Piece::KnightW, Piece::BishopW, Piece::RookW] {
-                        moves.push(Move::new(c, Some(p.to_color(board[c].get_color()))))
+                        moves.push(Move::new(c, Some(p.to_color(board[orig].get_color()))))
                     }
                 } else {
                     moves.push(c.into());

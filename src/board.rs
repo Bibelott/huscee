@@ -210,9 +210,17 @@ impl Board {
             self.castling[2 * piece.get_color() as usize + 1] = false;
         } else if piece.to_color(Color::White) == Piece::RookW {
             if f == 7 {
-                self.castling[2 * piece.get_color() as usize] = false;
+                if r == 0 {
+                    self.castling[0] = false;
+                } else if r == 7 {
+                    self.castling[2] = false;
+                }
             } else if f == 0 {
-                self.castling[2 * piece.get_color() as usize + 1] = false;
+                if r == 0 {
+                    self.castling[1] = false;
+                } else if r == 7 {
+                    self.castling[3] = false;
+                }
             }
         }
 
@@ -220,7 +228,9 @@ impl Board {
     }
 
     fn move_piece(&mut self, orig: Coord, mov: Move) {
-        self[mov.dst] = mov.prom_tgt.unwrap_or(self[orig]);
+        self[mov.dst] = mov
+            .prom_tgt
+            .map_or_else(|| self[orig], |p| p.to_color(self[orig].get_color()));
         self[orig] = Piece::Empty;
     }
 
