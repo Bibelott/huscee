@@ -6,9 +6,11 @@ edition = "2024"
 [dev-dependencies]
 huscee-macros = { git = "https://github.com/Bibelott/huscee-macros" }
 paste = "1.0.15"
-
-[profile.release]
-debug = true
+criterion = "0.7.0"
 
 [dependencies]
 rapidhash = "2.0.2"
+
+[[bench]]
+name = "huscee-bench"
+harness = false

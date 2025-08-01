@@ -1,4 +1,4 @@
-use crate::moves::{Move, MoveDict};
+use crate::moves::{Move, gen_moves};
 
 use super::*;
 
@@ -119,47 +119,31 @@ impl Board {
 
         let mut nodes = 0;
 
-        let move_dict = MoveDict::gen_moves(self);
-
-        for (orig, moves) in move_dict.0 {
-            let piece = self[orig];
-
-            if moves.is_empty() || piece == Piece::Empty {
-                continue;
-            }
-
-            for mov in moves {
-                let mut board = self.clone();
-                board.make_move(orig, mov);
-                nodes += board.perft(depth - 1);
-            }
+        for mov in gen_moves(self) {
+            let mut board = self.clone();
+            board.make_move(mov);
+            nodes += board.perft(depth - 1);
         }
 
         nodes
     }
 
-    pub fn perft_split(&self, depth: usize) -> HashMap<(Coord, Move), u64> {
+    pub fn perft_split(&self, depth: usize) -> HashMap<Move, u64> {
         let mut map = HashMap::new();
 
-        for (orig, moves) in MoveDict::gen_moves(self).0 {
-            if moves.is_empty() || self[orig] == Piece::Empty {
-                continue;
-            }
-
-            for mov in moves {
-                let mut board = self.clone();
-                board.make_move(orig, mov);
-                let n = board.perft(depth - 1);
-                map.insert((orig, mov), n);
-            }
+        for mov in gen_moves(self) {
+            let mut board = self.clone();
+            board.make_move(mov);
+            let n = board.perft(depth - 1);
+            map.insert(mov, n);
         }
         map
     }
 
-    pub fn make_move(&mut self, orig: Coord, mov: Move) {
-        let piece = self[orig];
+    pub fn make_move(&mut self, mov: Move) {
+        let piece = self[mov.orig];
 
-        self.move_piece(orig, mov);
+        self.move_piece(mov);
 
         if let Some(tgt) = self.en_pass_tgt
             && mov.dst == tgt
@@ -171,7 +155,7 @@ impl Board {
             }
         }
 
-        let (r, f) = orig.to_rf();
+        let (r, f) = mov.orig.to_rf();
 
         if piece.to_color(Color::White) == Piece::PawnW && r.abs_diff(mov.dst.rank() as usize) == 2
         {
@@ -184,15 +168,17 @@ impl Board {
         // Move the rook when castling
         if piece.to_color(Color::White) == Piece::KingW && f == 4 {
             if mov.dst.file() == 2 {
-                self.move_piece(
+                self.move_piece(Move::new(
                     (r, 0).try_into().unwrap(),
-                    Move::new((r, 3).try_into().unwrap(), None),
-                );
+                    (r, 3).try_into().unwrap(),
+                    None,
+                ));
             } else if mov.dst.file() == 6 {
-                self.move_piece(
+                self.move_piece(Move::new(
                     (r, 7).try_into().unwrap(),
-                    Move::new((r, 5).try_into().unwrap(), None),
-                );
+                    (r, 5).try_into().unwrap(),
+                    None,
+                ));
             }
         }
 
@@ -219,19 +205,18 @@ impl Board {
         self.to_move = self.to_move.flip()
     }
 
-    fn move_piece(&mut self, orig: Coord, mov: Move) {
-        self[mov.dst] = mov
-            .prom_tgt
-            .map_or_else(|| self[orig], |p| p.to_color(self[orig].get_color()));
-        self[orig] = Piece::Empty;
+    fn move_piece(&mut self, mov: Move) {
+        self[mov.dst] = mov.prom_tgt.map_or_else(
+            || self[mov.orig],
+            |p| p.to_color(self[mov.orig].get_color()),
+        );
+        self[mov.orig] = Piece::Empty;
     }
 
-    pub fn check_check(&self, move_dict: &MoveDict, color: Color) -> bool {
-        for moves in move_dict.0.values() {
-            for mov in moves {
-                if self[mov.dst] == Piece::KingW.to_color(color.flip()) {
-                    return true;
-                }
+    pub fn check_check(&self, moves: &[Move], color: Color) -> bool {
+        for mov in moves {
+            if self[mov.dst] == Piece::KingW.to_color(color.flip()) {
+                return true;
             }
         }
 
