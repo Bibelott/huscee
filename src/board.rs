@@ -2,7 +2,8 @@ use crate::moves::{Move, MoveDict};
 
 use super::*;
 
-use std::{collections::HashMap, error::Error};
+use rapidhash::fast::{HashMapExt, RapidHashMap as HashMap};
+use std::error::Error;
 
 const START_POS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -36,15 +37,6 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn new() -> Self {
-        Self {
-            board: [Piece::Empty; 128],
-            to_move: Color::White,
-            castling: [true; 4],
-            en_pass_tgt: None,
-        }
-    }
-
     pub fn from_fen(fen: &str) -> Result<Self, InvalidFenStringError> {
         let mut board = [Piece::Empty; 128];
 

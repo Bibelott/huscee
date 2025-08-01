@@ -6,3 +6,9 @@ edition = "2024"
 [dev-dependencies]
 huscee-macros = { git = "https://github.com/Bibelott/huscee-macros" }
 paste = "1.0.15"
+
+[profile.release]
+debug = true
+
+[dependencies]
+rapidhash = "2.0.2"

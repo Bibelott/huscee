@@ -1,7 +1,6 @@
 use super::*;
 
-// TODO: Use a non-crypto hashmap
-use std::collections::HashMap;
+use rapidhash::fast::{HashMapExt, RapidHashMap as HashMap};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Move {
@@ -28,10 +27,6 @@ impl From<Coord> for Move {
 pub struct MoveDict(pub HashMap<Coord, Box<[Move]>>);
 
 impl MoveDict {
-    pub fn new() -> Self {
-        Self(HashMap::new())
-    }
-
     pub fn gen_moves(board: &Board) -> Self {
         let orig_board = board.clone();
 
@@ -77,7 +72,9 @@ impl MoveDict {
 
                 legal_moves.push(mov);
             }
-            legal_dict.insert(orig, legal_moves.into_boxed_slice());
+            if !legal_moves.is_empty() {
+                legal_dict.insert(orig, legal_moves.into_boxed_slice());
+            }
         }
 
         Self(legal_dict)
@@ -99,7 +96,9 @@ impl MoveDict {
 
                 let moves = Self::gen_at_coord_illegal(board, coord);
 
-                dict.insert(coord, moves);
+                if !moves.is_empty() {
+                    dict.insert(coord, moves);
+                }
             }
         }
 

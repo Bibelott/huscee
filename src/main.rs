@@ -7,7 +7,7 @@ use coord::Coord;
 
 use std::{error::Error, fmt::Display, io};
 
-use crate::moves::Move;
+use crate::moves::{Move, MoveDict};
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -157,15 +157,15 @@ fn main() {
     //
     'line_loop: while stdin.read_line(&mut line).is_ok() {
         let mut line_iter = line.split_whitespace();
-        let mut response = "";
+        let mut response = String::from("");
         while let Some(first) = line_iter.next() {
             response = match first {
-                "uci" => "uciok",
+                "uci" => String::from("uciok"),
                 "ucinewgame" => {
                     board = Board::start_pos();
-                    ""
+                    "".into()
                 }
-                "isready" => "readyok",
+                "isready" => "readyok".into(),
                 "position" => {
                     match line_iter.next().expect("Unknown command") {
                         "startpos" => board = Board::start_pos(),
@@ -199,44 +199,88 @@ fn main() {
                         }
                     }
 
-                    ""
+                    "".into()
                 }
-                "go" => {
-                    match line_iter.next().expect("Unknown command") {
-                        "perft" => {
-                            let depth = line_iter.next().unwrap().parse().unwrap();
-                            let start = std::time::Instant::now();
-                            let split_map = board.perft_split(depth);
-                            let time = start.elapsed().as_millis();
+                "go" => match line_iter.next().unwrap_or("") {
+                    "perft" => {
+                        let depth = line_iter.next().unwrap().parse().unwrap();
+                        let start = std::time::Instant::now();
+                        let split_map = board.perft_split(depth);
+                        let time = start.elapsed().as_millis();
 
-                            let mut nodes = 0;
+                        let mut nodes = 0;
 
-                            for ((orig, mov), n) in split_map {
-                                println!(
-                                    "{}{}{}: {}",
-                                    orig.to_alg(),
-                                    mov.dst.to_alg(),
-                                    mov.prom_tgt.map_or_else(
-                                        || "",
-                                        |p| match p {
-                                            Piece::QueenW | Piece::QueenB => "q",
-                                            Piece::KnightW | Piece::KnightB => "n",
-                                            Piece::RookW | Piece::RookB => "r",
-                                            Piece::BishopW | Piece::BishopB => "b",
-                                            _ => unreachable!(),
-                                        }
-                                    ),
-                                    n
-                                );
-                                nodes += n;
-                            }
-
-                            println!("\nSearched {nodes} nodes in {time}ms");
+                        for ((orig, mov), n) in split_map {
+                            println!(
+                                "{}{}{}: {}",
+                                orig.to_alg(),
+                                mov.dst.to_alg(),
+                                mov.prom_tgt.map_or_else(
+                                    || "",
+                                    |p| match p {
+                                        Piece::QueenW | Piece::QueenB => "q",
+                                        Piece::KnightW | Piece::KnightB => "n",
+                                        Piece::RookW | Piece::RookB => "r",
+                                        Piece::BishopW | Piece::BishopB => "b",
+                                        _ => unreachable!(),
+                                    }
+                                ),
+                                n
+                            );
+                            nodes += n;
                         }
-                        _ => panic!("Unknown command"),
+
+                        println!("\nSearched {nodes} nodes in {time}ms");
+                        "".into()
                     }
-                    ""
-                }
+                    depth => {
+                        let depth = depth.parse::<u8>().unwrap();
+                        let start = std::time::Instant::now();
+
+                        let move_dict = MoveDict::gen_moves(&board);
+
+                        let mut best = f32::NEG_INFINITY;
+                        let mut best_move = None;
+
+                        for (orig, moves) in move_dict.0 {
+                            for mov in moves {
+                                let mut board = board.clone();
+                                board.make_move(orig, mov);
+
+                                let value =
+                                    -negamax(f32::NEG_INFINITY, f32::INFINITY, depth - 1, &board);
+
+                                if value > best {
+                                    best = value;
+                                    best_move = Some((orig, mov));
+                                }
+                            }
+                        }
+                        let best_move = best_move.expect("No moves :(");
+
+                        println!(
+                            "Found move with {} valuation in {}ms",
+                            best,
+                            start.elapsed().as_millis()
+                        );
+
+                        format!(
+                            "bestmove {}{}{}",
+                            best_move.0.to_alg(),
+                            best_move.1.dst.to_alg(),
+                            best_move.1.prom_tgt.map_or_else(
+                                || "",
+                                |p| match p {
+                                    Piece::QueenW | Piece::QueenB => "q",
+                                    Piece::KnightW | Piece::KnightB => "n",
+                                    Piece::RookW | Piece::RookB => "r",
+                                    Piece::BishopW | Piece::BishopB => "b",
+                                    _ => unreachable!(),
+                                }
+                            )
+                        )
+                    }
+                },
                 "quit" => break 'line_loop,
                 _ => continue,
             };
@@ -247,4 +291,81 @@ fn main() {
 
         line.clear();
     }
+}
+
+fn negamax(alpha: f32, beta: f32, depth: u8, board: &Board) -> f32 {
+    let my_color = board.to_move;
+
+    let move_dict = MoveDict::gen_moves(board);
+
+    if depth == 0 {
+        let mut heuristic = 0.0;
+
+        for rank in 0..8 {
+            for file in 0..8 {
+                let coord = Coord::from_rf(rank, file).unwrap();
+
+                let mut value = match board[coord] {
+                    Piece::PawnW | Piece::PawnB => 1.0,
+
+                    Piece::KnightW | Piece::KnightB | Piece::BishopW | Piece::BishopB => 3.0,
+
+                    Piece::RookW | Piece::RookB => 5.0,
+
+                    Piece::QueenW | Piece::QueenB => 9.0,
+
+                    _ => continue,
+                };
+
+                value += if let Some(moves) = move_dict.0.get(&coord) {
+                    (moves.len() as f32) / 10.0
+                } else {
+                    0.0
+                };
+
+                if board[coord] == Piece::PawnW {
+                    value += coord.rank() as f32 / 10.0;
+                } else if board[coord] == Piece::PawnB {
+                    value += (7 - coord.rank()) as f32 / 10.0
+                }
+
+                if board[coord].get_color() != my_color {
+                    value = -value;
+                }
+
+                heuristic += value;
+            }
+        }
+
+        return heuristic;
+    }
+
+    if move_dict.0.is_empty() {
+        return if board.check_check(&move_dict, my_color.flip()) {
+            f32::NEG_INFINITY
+        } else {
+            0.0
+        };
+    }
+
+    let mut alpha = alpha;
+
+    for (orig, moves) in move_dict.0 {
+        for mov in moves {
+            let mut board = board.clone();
+            board.make_move(orig, mov);
+
+            let value = -negamax(-beta, -alpha, depth - 1, &board);
+
+            if value >= beta {
+                return beta;
+            }
+
+            if value > alpha {
+                alpha = value;
+            }
+        }
+    }
+
+    alpha
 }
