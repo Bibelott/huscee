@@ -17,6 +17,27 @@ impl Move {
     }
 }
 
+impl Display for Move {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}{}{}",
+            self.orig.to_alg(),
+            self.dst.to_alg(),
+            self.prom_tgt.map_or_else(
+                || "",
+                |p| match p {
+                    Piece::QueenW | Piece::QueenB => "q",
+                    Piece::KnightW | Piece::KnightB => "n",
+                    Piece::RookW | Piece::RookB => "r",
+                    Piece::BishopW | Piece::BishopB => "b",
+                    _ => unreachable!(),
+                }
+            ),
+        )
+    }
+}
+
 pub fn gen_moves(board: &Board) -> Vec<Move> {
     let orig_board = board.clone();
 

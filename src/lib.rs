@@ -144,7 +144,20 @@ impl From<Piece> for char {
     }
 }
 
-pub fn negamax(alpha: f32, beta: f32, depth: u8, board: &Board) -> f32 {
+pub struct AbortedError;
+
+pub fn negamax(
+    alpha: f32,
+    beta: f32,
+    depth: u8,
+    board: &Board,
+    start: &std::time::Instant,
+    max_time: u128,
+) -> Result<f32, AbortedError> {
+    if start.elapsed().as_millis() > max_time {
+        return Err(AbortedError);
+    }
+
     let my_color = board.to_move;
 
     if depth == 0 {
@@ -192,7 +205,7 @@ pub fn negamax(alpha: f32, beta: f32, depth: u8, board: &Board) -> f32 {
             }
         }
 
-        return heuristic;
+        return Ok(heuristic);
     }
     let moves = gen_moves(board);
 
@@ -202,9 +215,9 @@ pub fn negamax(alpha: f32, beta: f32, depth: u8, board: &Board) -> f32 {
         let moves = gen_moves(&board);
 
         return if board.check_check(&moves, my_color.flip()) {
-            f32::NEG_INFINITY
+            Ok(f32::NEG_INFINITY)
         } else {
-            0.0
+            Ok(0.0)
         };
     }
 
@@ -214,10 +227,10 @@ pub fn negamax(alpha: f32, beta: f32, depth: u8, board: &Board) -> f32 {
         let mut board = board.clone();
         board.make_move(mov);
 
-        let value = -negamax(-beta, -alpha, depth - 1, &board);
+        let value = -negamax(-beta, -alpha, depth - 1, &board, start, max_time)?;
 
         if value >= beta {
-            return beta;
+            return Ok(beta);
         }
 
         if value > alpha {
@@ -225,5 +238,5 @@ pub fn negamax(alpha: f32, beta: f32, depth: u8, board: &Board) -> f32 {
         }
     }
 
-    alpha
+    Ok(alpha)
 }
